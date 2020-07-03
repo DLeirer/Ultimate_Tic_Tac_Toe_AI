@@ -1,0 +1,88 @@
+######################################################
+################## load libraries ####################
+######################################################
+
+import sys
+import numpy as np
+import math
+
+
+
+
+######################################################
+################## Classes   #########################
+######################################################
+
+class Game():
+  def __init__(self):
+    self.game_board_top = np.zeros([3,3])
+    self.game_board_full = np.zeros([9,9])
+    self.current_board_id = False
+    self.current_player = 1
+    self.next_player = -1
+    self.board_index = [0,0,0,1,1,1,2,2,2]
+    #self.square_index = [0,1,2,0,1,2,0,1,2]
+    self.border_list=[0,0,0,3,3,3,6,6,6]
+    self.border_list_next = [0,3,6,0,3,6,0,3,6]
+
+  def check_if_winner(self,current_game_board):
+    results=[]
+    #get sum values for axes. 
+    #axis 0
+    results.extend(np.sum(current_game_board, axis=0))
+    #axis 1
+    results.extend(np.sum(current_game_board,axis=1))
+    #diagnonals
+    results.append(np.trace(current_game_board))
+    results.append(np.trace(np.fliplr(current_game_board)))
+    
+    #check if any axes meet win condition:
+    if (3*self.current_player) in results:
+      return True
+      
+        
+
+      #in big game board replace the matrix with single player value. 
+  def play_move(self,x,y):
+      #bx, by = board x and y borders.       
+      bx,by = self.border_list[x],self.border_list[y]
+      #tx,ty = top board coordinates identifiers. 
+      tx,ty = self.board_index[x],self.board_index[y]
+    
+
+      #update board
+      self.game_board_full[x,y] = self.current_player
+      #check if winner
+      small_win = self.check_if_winner(self.game_board_full[bx:bx+3,by:by+3])
+      if small_win == True:
+        self.game_board_full[bx:bx+3,by:by+3] = self.current_player
+        #update top board
+        self.game_board_top[tx,ty] = self.current_player
+        #check if winner
+        top_win = self.check_if_winner(self.game_board_top)
+        if top_win == True:
+            if self.current_player == 1:
+              print("player 1 WON!")
+            else:
+              print("player 2 WON!")
+
+      #get legal moves for next turn.
+      self.get_legal_moves(x,y)
+
+      #change player
+      (self.current_player, self.next_player) = (self.next_player,self.current_player)
+  
+  def get_legal_moves(self,x,y):
+    all_moves = np.where(self.game_board_full == 0)
+    all_moves=np.asarray(all_moves)
+
+    bx = self.border_list_next[x]
+    by = self.border_list_next[y]
+    
+    bool_list=(all_moves[0] >= bx) & (all_moves[0] < bx+3) & (all_moves[1] >= by) & (all_moves[1] < by+3) 
+    all_moves_square=all_moves[0:2,bool_list].T
+
+    if len(all_moves_square) > 0:
+      self.legal_moves = all_moves_square
+    else:
+      self.legal_moves = all_moves
